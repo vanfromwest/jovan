@@ -111,10 +111,14 @@ $announcements = getAnnouncements(20);
                             <div class="alert alert-info">No announcements at this time</div>
                         <?php else: ?>
                             <?php foreach ($announcements as $ann): ?>
-                                <div class="mb-4 pb-4 border-bottom">
+                                <div class="mb-4 pb-4 border-bottom <?php echo $ann['is_pinned'] ? 'announcement-pinned' : ''; ?>">
                                     <div class="d-flex justify-content-between align-items-start">
                                         <div>
-                                            <h5><?php echo htmlspecialchars($ann['title']); ?></h5>
+                                            <h5><?php echo htmlspecialchars($ann['title']); ?>
+                                                <?php if ($ann['is_pinned']): ?>
+                                                    <span class="pinned-badge"><i class="bi bi-pin-fill"></i> Pinned</span>
+                                                <?php endif; ?>
+                                            </h5>
                                             <small class="text-muted">
                                                 By: <?php echo htmlspecialchars($ann['fullname']); ?> | 
                                                 <?php echo formatDateTime($ann['created_at']); ?>

@@ -409,14 +409,13 @@ function approveUser($userId) {
 function rejectUser($userId) {
     global $conn;
     
-    $status = 'REJECTED';
-    $stmt = $conn->prepare("UPDATE users SET status = ? WHERE id = ?");
-    $stmt->bind_param("si", $status, $userId);
+    $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
+    $stmt->bind_param("i", $userId);
     
     $result = $stmt->execute();
     
     if ($result) {
-        logActivity('USER_REJECTED', 'User ID: ' . $userId, getCurrentUserId());
+        logActivity('USER_REJECTED', 'User ID: ' . $userId . ' deleted', getCurrentUserId());
     }
     
     return $result;
@@ -555,17 +554,42 @@ function getUsersByRole($role) {
 // Announcement Functions
 // ============================================
 
-function getAnnouncements($limit = 10) {
+function getAnnouncements($limit = 10, $todayOnly = false) {
     global $conn;
     
-    $stmt = $conn->prepare("
+    $sql = "
         SELECT a.*, u.fullname, u.profile_image
         FROM announcements a
         JOIN users u ON a.created_by = u.id
         WHERE a.is_active = 1
-        ORDER BY a.created_at DESC
-        LIMIT ?
-    ");
+    ";
+    if ($todayOnly) {
+        $sql .= " AND DATE(a.created_at) = CURDATE()";
+    }
+    $sql .= " ORDER BY a.is_pinned DESC, a.created_at DESC LIMIT ?";
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $limit);
+    $stmt->execute();
+    
+    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
+
+function getPinnedAnnouncements($limit = 5, $todayOnly = false) {
+    global $conn;
+    
+    $sql = "
+        SELECT a.*, u.fullname, u.profile_image
+        FROM announcements a
+        JOIN users u ON a.created_by = u.id
+        WHERE a.is_active = 1 AND a.is_pinned = 1
+    ";
+    if ($todayOnly) {
+        $sql .= " AND DATE(a.created_at) = CURDATE()";
+    }
+    $sql .= " ORDER BY a.created_at DESC LIMIT ?";
+    
+    $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $limit);
     $stmt->execute();
     
@@ -575,11 +599,17 @@ function getAnnouncements($limit = 10) {
 function createAnnouncement($title, $content, $userId) {
     global $conn;
     
+    $userStmt = $conn->prepare("SELECT role FROM users WHERE id = ?");
+    $userStmt->bind_param("i", $userId);
+    $userStmt->execute();
+    $user = $userStmt->get_result()->fetch_assoc();
+    $isPinned = ($user && $user['role'] === 'Admin') ? 1 : 0;
+    
     $stmt = $conn->prepare("
-        INSERT INTO announcements (title, content, created_by)
-        VALUES (?, ?, ?)
+        INSERT INTO announcements (title, content, created_by, is_pinned)
+        VALUES (?, ?, ?, ?)
     ");
-    $stmt->bind_param("ssi", $title, $content, $userId);
+    $stmt->bind_param("ssii", $title, $content, $userId, $isPinned);
     
     return $stmt->execute();
 }

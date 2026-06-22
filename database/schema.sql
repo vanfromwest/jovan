@@ -115,6 +115,7 @@ CREATE TABLE IF NOT EXISTS `announcements` (
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `is_active` BOOLEAN DEFAULT 1,
+  `is_pinned` BOOLEAN DEFAULT 0,
   FOREIGN KEY (`created_by`) REFERENCES `users`(`id`) ON DELETE CASCADE,
   INDEX `idx_created_at` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

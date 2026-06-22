@@ -127,6 +127,44 @@ $facultyStatus = getAllFaculty();
                     </div>
                 </div>
 
+                <!-- Pinned Announcements -->
+                <?php $pinnedAnnouncements = getPinnedAnnouncements(5, true); ?>
+                <div class="row mb-4" id="pinned-announcements-row">
+                    <div class="col-md-12">
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <i class="bi bi-pin-fill"></i> Pinned Announcements
+                                <small class="ms-auto refresh-indicator" id="announcement-refresh-indicator" title="Auto-refreshes every 30s"></small>
+                            </div>
+                            <div class="card-body" id="announcements-container">
+                                <?php if (empty($pinnedAnnouncements)): ?>
+                                    <p class="text-muted mb-0" id="no-announcements-msg">No pinned announcements yet</p>
+                                <?php else: ?>
+                                    <?php foreach ($pinnedAnnouncements as $ann): ?>
+                                        <div class="mb-3 pb-3 border-bottom announcement-pinned announcement-item">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6><?php echo htmlspecialchars($ann['title']); ?>
+                                                        <span class="pinned-badge"><i class="bi bi-pin-fill"></i> Pinned</span>
+                                                    </h6>
+                                                    <small class="text-muted">
+                                                        <i class="bi bi-person"></i> <?php echo htmlspecialchars($ann['fullname']); ?> |
+                                                        <i class="bi bi-clock"></i> <?php echo formatDateTime($ann['created_at']); ?>
+                                                    </small>
+                                                </div>
+                                            </div>
+                                            <p class="mt-2 mb-0"><?php echo htmlspecialchars(substr($ann['content'], 0, 150)); ?>...</p>
+                                        </div>
+                                    <?php endforeach; ?>
+                                    <a href="announcements.php" class="btn btn-sm btn-primary mt-2">
+                                        <i class="bi bi-megaphone"></i> Manage Announcements
+                                    </a>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Faculty Status -->
                 <div class="row mb-4">
                     <div class="col-md-12">
@@ -219,6 +257,77 @@ $facultyStatus = getAllFaculty();
     <script>
         const SITE_URL = '<?php echo SITE_URL; ?>';
         const UPLOAD_DIR = '<?php echo UPLOAD_DIR; ?>';
+    </script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const container = document.getElementById('announcements-container');
+        const indicator = document.getElementById('announcement-refresh-indicator');
+        if (!container) return;
+
+        function refreshAnnouncements() {
+            if (indicator) indicator.innerHTML = '<i class="bi bi-arrow-repeat spin"></i>';
+
+            fetch(SITE_URL + '/api/announcements.php?type=pinned&t=' + Date.now())
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        const items = container.querySelectorAll('.announcement-item');
+                        const currentCount = items.length;
+                        const newCount = data.count;
+
+                        if (newCount > currentCount) {
+                            container.style.transition = 'background-color 0.5s';
+                            container.style.backgroundColor = 'rgba(255, 215, 0, 0.15)';
+                            setTimeout(() => { container.style.backgroundColor = ''; }, 1500);
+                        }
+
+                        if (data.count === 0) {
+                            container.innerHTML = '<p class="text-muted mb-0" id="no-announcements-msg">No pinned announcements yet</p>';
+                        } else {
+                            let html = '';
+                            data.announcements.forEach(function(ann) {
+                                html += '<div class="mb-3 pb-3 border-bottom announcement-pinned announcement-item">';
+                                html += '<div class="d-flex justify-content-between align-items-start">';
+                                html += '<div>';
+                                html += '<h6>' + escapeHtml(ann.title) + ' <span class="pinned-badge"><i class="bi bi-pin-fill"></i> Pinned</span></h6>';
+                                html += '<small class="text-muted"><i class="bi bi-person"></i> ' + escapeHtml(ann.fullname) + ' | <i class="bi bi-clock"></i> ' + formatDateStr(ann.created_at) + '</small>';
+                                html += '</div></div>';
+                                html += '<p class="mt-2 mb-0">' + escapeHtml(truncateText(ann.content, 150)) + '...</p>';
+                                html += '</div>';
+                            });
+                            html += '<a href="announcements.php" class="btn btn-sm btn-primary mt-2"><i class="bi bi-megaphone"></i> Manage Announcements</a>';
+                            container.innerHTML = html;
+                        }
+                    }
+                    if (indicator) indicator.innerHTML = '<i class="bi bi-check-circle-fill text-success" style="font-size:12px;"></i>';
+                })
+                .catch(function() {
+                    if (indicator) indicator.innerHTML = '<i class="bi bi-exclamation-circle-fill text-danger" style="font-size:12px;"></i>';
+                });
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            var d = document.createElement('div');
+            d.appendChild(document.createTextNode(str));
+            return d.innerHTML;
+        }
+
+        function truncateText(str, max) {
+            if (!str) return '';
+            return str.length > max ? str.substring(0, max) : str;
+        }
+
+        function formatDateStr(dateStr) {
+            if (!dateStr) return '';
+            var d = new Date(dateStr.replace(' ', 'T'));
+            if (isNaN(d.getTime())) return dateStr;
+            var opts = { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+            return d.toLocaleDateString('en-US', opts);
+        }
+
+        setInterval(refreshAnnouncements, 30000);
+    });
     </script>
 </body>
 </html>

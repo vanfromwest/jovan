@@ -31,10 +31,10 @@ try {
         exit();
     }
     
+    $emailSent = sendRejectionEmail($userId);
     $result = rejectUser($userId);
     
     if ($result) {
-        $emailSent = sendRejectionEmail($userId);
         echo json_encode([
             'success' => true,
             'message' => 'User account rejected successfully',
