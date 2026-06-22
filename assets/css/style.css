@@ -643,6 +643,202 @@ body > footer {
 }
 
 /* ============================================
+   SEARCH RESULTS
+   ============================================ */
+
+.search-container {
+    position: relative;
+}
+
+.search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1050;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    max-height: 400px;
+    overflow-y: auto;
+    display: none;
+}
+
+.search-results.show {
+    display: block;
+}
+
+.faculty-search-result {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.faculty-search-result:last-child {
+    border-bottom: none;
+}
+
+.faculty-search-result:hover {
+    background-color: #f5f8f0;
+}
+
+.faculty-pic {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #2d5016, #1a3a0a);
+}
+
+.faculty-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.faculty-info h6 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--primary-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.faculty-info p {
+    margin: 0;
+    font-size: 12px;
+    color: #888;
+}
+
+.faculty-info .search-match {
+    font-size: 11px;
+    color: #666;
+    margin-top: 2px;
+}
+
+.search-highlight {
+    background-color: #fff3cd;
+    padding: 0 2px;
+    border-radius: 2px;
+    font-weight: 600;
+}
+
+.search-input-wrapper {
+    position: relative;
+}
+
+.search-input-wrapper .bi-search {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #aaa;
+    z-index: 5;
+}
+
+.search-input-wrapper input {
+    padding-left: 36px;
+}
+
+.search-input-wrapper .search-clear {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #aaa;
+    cursor: pointer;
+    display: none;
+    font-size: 18px;
+    line-height: 1;
+}
+
+.search-input-wrapper .search-clear:hover {
+    color: #dc3545;
+}
+
+.search-input-wrapper input:not(:placeholder-shown) ~ .search-clear {
+    display: block;
+}
+
+.search-stats {
+    font-size: 13px;
+    color: #888;
+    padding: 8px 0 0;
+}
+
+/* Monitor page search */
+.monitor-search {
+    max-width: 400px;
+    margin: 0 auto 10px;
+    position: relative;
+}
+
+.monitor-search input {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 8px 14px 8px 36px;
+    border-radius: 20px;
+    font-size: 13px;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+.monitor-search input::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.monitor-search input:focus {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: var(--accent-color);
+    outline: none;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+}
+
+.monitor-search .bi-search {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 14px;
+}
+
+.monitor-card.filtered-out {
+    display: none !important;
+}
+
+.monitor-search .search-clear-monitor {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    display: none;
+    font-size: 16px;
+}
+
+.monitor-search .search-clear-monitor:hover {
+    color: #ff6b6b;
+}
+
+.monitor-search input:not(:placeholder-shown) ~ .search-clear-monitor {
+    display: block;
+}
+
+/* ============================================
    SCROLLBAR STYLING
    ============================================ */
 

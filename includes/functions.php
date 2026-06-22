@@ -211,6 +211,104 @@ function getAllFaculty($departmentId = null) {
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 
+function searchFaculty($query, $type = null, $departmentId = null) {
+    global $conn;
+    
+    $search = '%' . $query . '%';
+    $exactSearch = $query . '%';
+    
+    $sql = "
+        SELECT 
+            f.id as faculty_id,
+            u.id as user_id,
+            u.fullname,
+            u.email,
+            u.profile_image,
+            f.position,
+            u.department_id,
+            d.name as department,
+            fs.status,
+            fs.activity,
+            fs.location,
+            fs.updated_at
+        FROM users u
+        JOIN faculty f ON u.id = f.user_id
+        LEFT JOIN departments d ON u.department_id = d.id
+        LEFT JOIN faculty_status fs ON f.id = fs.faculty_id
+        WHERE u.role = 'Faculty' AND u.status = 'APPROVED'
+    ";
+    
+    $params = [];
+    $types = '';
+    
+    if ($departmentId) {
+        $sql .= " AND u.department_id = ?";
+        $params[] = $departmentId;
+        $types .= 'i';
+    }
+    
+    if ($type === 'name') {
+        $sql .= " AND u.fullname LIKE ?";
+        $params[] = $search;
+        $types .= 's';
+    } elseif ($type === 'department') {
+        $sql .= " AND d.name LIKE ?";
+        $params[] = $search;
+        $types .= 's';
+    } elseif ($type === 'position') {
+        $sql .= " AND f.position LIKE ?";
+        $params[] = $search;
+        $types .= 's';
+    } elseif ($type === 'status') {
+        $sql .= " AND fs.status LIKE ?";
+        $params[] = $search;
+        $types .= 's';
+    } elseif ($type === 'activity') {
+        $sql .= " AND fs.activity LIKE ?";
+        $params[] = $search;
+        $types .= 's';
+    } elseif ($type === 'location') {
+        $sql .= " AND fs.location LIKE ?";
+        $params[] = $search;
+        $types .= 's';
+    } else {
+        $sql .= " AND (
+            u.fullname LIKE ? OR
+            d.name LIKE ? OR
+            f.position LIKE ? OR
+            fs.status LIKE ? OR
+            fs.activity LIKE ? OR
+            fs.location LIKE ?
+        )";
+        array_push($params, $search, $search, $search, $search, $search, $search);
+        $types .= 'ssssss';
+    }
+    
+    $sql .= " ORDER BY 
+        CASE WHEN u.fullname LIKE ? THEN 0 ELSE 1 END,
+        u.fullname ASC
+        LIMIT 50";
+    
+    $params[] = $exactSearch;
+    $types .= 's';
+    
+    $stmt = $conn->prepare($sql);
+    
+    if (!empty($params)) {
+        $stmt->bind_param($types, ...$params);
+    }
+    
+    $stmt->execute();
+    $results = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    
+    foreach ($results as &$row) {
+        $row['status'] = $row['status'] ?? 'OUT';
+        $row['department'] = $row['department'] ?? 'N/A';
+    }
+    
+    return $results;
+}
+
 function getFacultyWithUser($facultyId) {
     global $conn;
     

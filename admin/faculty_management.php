@@ -11,6 +11,7 @@ $deleted = isset($_GET['deleted']) ? true : false;
 $error = sanitizeInput($_GET['error'] ?? '');
 
 $faculty = getAllFaculty();
+$departments = getAllDepartments();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -48,12 +49,47 @@ $faculty = getAllFaculty();
                     </div>
                 <?php endif; ?>
 
-                <div class="row">
+                <!-- Search -->
+                <div class="dashboard-card mb-4">
+                    <div class="card-body">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold"><i class="bi bi-search"></i> Search Faculty</label>
+                                <div class="search-input-wrapper">
+                                    <i class="bi bi-search"></i>
+                                    <input type="text" class="form-control" id="faculty-search" placeholder="Search by name, department, position, or activity...">
+                                    <button class="search-clear" id="search-clear" title="Clear">&times;</button>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold"><i class="bi bi-funnel"></i> Department</label>
+                                <select class="form-select" id="department-filter">
+                                    <option value="">All Departments</option>
+                                    <?php foreach ($departments as $dept): ?>
+                                        <option value="<?php echo $dept['id']; ?>"><?php echo htmlspecialchars($dept['name']); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold"><i class="bi bi-funnel"></i> Status</label>
+                                <select class="form-select" id="status-filter">
+                                    <option value="">All Status</option>
+                                    <option value="IN">IN</option>
+                                    <option value="OUT">OUT</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="search-stats" id="search-stats"></div>
+                    </div>
+                </div>
+
+                <!-- Faculty Grid -->
+                <div class="row" id="faculty-grid">
                     <?php foreach ($faculty as $f): 
                         $status = getFacultyStatus($f['faculty_id']);
                         $statusClass = ($status['status'] === 'IN') ? 'in' : 'out';
                     ?>
-                        <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="col-md-6 col-lg-4 mb-4 faculty-card" data-faculty-id="<?php echo $f['faculty_id']; ?>">
                             <div class="dashboard-card">
                                 <div class="card-body text-center">
                                     <img src="<?php echo SITE_URL . '/' . UPLOAD_DIR . 'profiles/' . ($f['profile_image'] ?? 'default.png'); ?>" 
@@ -87,9 +123,136 @@ $faculty = getAllFaculty();
     </div>
 
     <?php require_once '../includes/footer.php'; ?>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="<?php echo SITE_URL; ?>/assets/js/main.js"></script>
     <script>
         const SITE_URL = '<?php echo SITE_URL; ?>';
         const UPLOAD_DIR = '<?php echo UPLOAD_DIR; ?>';
+
+        let searchTimeout = null;
+
+        $(document).ready(function() {
+            $('#faculty-search').on('input', function() {
+                clearTimeout(searchTimeout);
+                const query = $(this).val().trim();
+                if (query.length === 0) {
+                    resetToAllFaculty();
+                    return;
+                }
+                if (query.length < 2) return;
+                searchTimeout = setTimeout(doSearch, 300);
+            });
+
+            $('#search-clear').on('click', function() {
+                $('#faculty-search').val('').trigger('input').focus();
+            });
+
+            $('#department-filter, #status-filter').on('change', function() {
+                const query = $('#faculty-search').val().trim();
+                if (query.length >= 2) {
+                    doSearch();
+                } else {
+                    resetToAllFaculty();
+                }
+            });
+        });
+
+        function doSearch() {
+            const query = $('#faculty-search').val().trim();
+            const departmentId = $('#department-filter').val();
+            const statusFilter = $('#status-filter').val();
+
+            const data = { q: query };
+            if (departmentId) data.department_id = departmentId;
+
+            $.ajax({
+                url: SITE_URL + '/api/search_faculty.php',
+                type: 'GET',
+                dataType: 'json',
+                data: data,
+                success: function(response) {
+                    if (response.success) {
+                        renderResults(response.data.results, query, statusFilter);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Search error:', error);
+                }
+            });
+        }
+
+        function renderResults(results, query, statusFilter) {
+            const $grid = $('#faculty-grid');
+            $grid.empty();
+
+            let filtered = results;
+            if (statusFilter) {
+                filtered = filtered.filter(function(f) {
+                    return f.status === statusFilter;
+                });
+            }
+
+            if (filtered.length === 0) {
+                $grid.html('<div class="col-12"><div class="alert alert-info text-center">No faculty members match your search criteria.</div></div>');
+                $('#search-stats').text('No results found for "' + query + '"');
+                return;
+            }
+
+            $('#search-stats').text(filtered.length + ' result(s) found for "' + query + '"');
+
+            $.each(filtered, function(_, f) {
+                const statusClass = f.status === 'IN' ? 'in' : 'out';
+                const statusText = f.status === 'IN' ? 'IN' : 'OUT';
+
+                const card = `
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="dashboard-card">
+                            <div class="card-body text-center">
+                                <img src="${SITE_URL}/${UPLOAD_DIR}profiles/${f.profile_image || 'default.png'}"
+                                     class="rounded-circle mb-3" width="80" height="80" alt="${escapeHtml(f.fullname)}">
+                                <h5>${highlightText(escapeHtml(f.fullname), query)}</h5>
+                                <p class="text-muted">${escapeHtml(f.position || 'Faculty')}</p>
+                                <span class="status-badge ${statusClass} mb-3">
+                                    <span class="status-badge-pulse"></span>
+                                    ${statusText}
+                                </span>
+                                <div class="mt-3">
+                                    <a href="edit_faculty.php?id=${f.faculty_id}" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-pencil"></i> Edit
+                                    </a>
+                                    <a href="delete_faculty.php?id=${f.faculty_id}"
+                                       class="btn btn-sm btn-danger"
+                                       onclick="return confirm('Are you sure?')">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                $grid.append(card);
+            });
+        }
+
+        function resetToAllFaculty() {
+            $('#search-stats').empty();
+            location.reload();
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function highlightText(text, query) {
+            if (!query) return text;
+            try {
+                const regex = new RegExp('(' + query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+                return text.replace(regex, '<span class="search-highlight">$1</span>');
+            } catch(e) {
+                return text;
+            }
+        }
     </script>
 </body>
 </html>
