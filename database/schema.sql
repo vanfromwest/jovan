@@ -192,7 +192,28 @@ INSERT IGNORE INTO `activities` (`id`, `name`, `description`, `icon`) VALUES
 INSERT IGNORE INTO `users` 
 (`id`, `fullname`, `username`, `email`, `password`, `role`, `status`, `contact_number`, `department_id`, `is_active`) 
 VALUES 
-(1, 'Admin User', 'adminsonic', 'adminsonic@ccsict.com', '$2y$10$r9h/cIPz0gi.URNNX3kh2OPST9/PgBkqquzi.Ss7KIUgO2t0jKMm2', 'Admin', 'APPROVED', '09123456789', 1, 1);
+(1, 'Admin User', 'adminsonic', 'adminsonic@ccsict.com', '$2y$10$a0b8Eaq.uuY/15Y5WklSrOOVtQdPLmW3B71YZhIH3UWoCIA3gud0a', 'Admin', 'APPROVED', '09123456789', 1, 1);
 
 -- Note: Password for admin is 'sonic123' (hashed with bcrypt)
 -- To generate new hashes, use: password_hash('password', PASSWORD_BCRYPT)
+
+-- ============================================
+-- Table: email_config
+-- ============================================
+CREATE TABLE IF NOT EXISTS `email_config` (
+  `id` INT PRIMARY KEY AUTO_INCREMENT,
+  `key` VARCHAR(50) NOT NULL UNIQUE,
+  `value` TEXT,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX `idx_key` (`key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Insert default email config values
+INSERT IGNORE INTO `email_config` (`key`, `value`) VALUES
+('mail_host', 'smtp.gmail.com'),
+('mail_port', '587'),
+('mail_username', ''),
+('mail_password', ''),
+('mail_encryption', 'tls'),
+('from_email', ''),
+('from_name', 'CCSICT Faculty Monitoring System');

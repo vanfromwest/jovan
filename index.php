@@ -139,9 +139,11 @@ $pageTitle = 'Home';
             color: #ffd700 !important;
         }
 
-        footer {
+        body > footer {
             background-color: rgba(0, 0, 0, 0.4);
             border-top: 2px solid #ffd700;
+            margin-left: 0;
+            width: 100%;
         }
     </style>
 </head>

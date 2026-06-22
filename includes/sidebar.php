@@ -39,6 +39,9 @@ $userRole = $currentUser['role'] ?? null;
             <a href="<?php echo SITE_URL; ?>/admin/attendance_reports.php" class="sidebar-link">
                 <i class="bi bi-file-text"></i> Reports
             </a>
+            <a href="<?php echo SITE_URL; ?>/admin/email_settings.php" class="sidebar-link">
+                <i class="bi bi-envelope"></i> Email Settings
+            </a>
         <!-- Faculty Menu -->
         <?php elseif ($userRole === 'Faculty'): ?>
             <a href="<?php echo SITE_URL; ?>/faculty/dashboard.php" class="sidebar-link">

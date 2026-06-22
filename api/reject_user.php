@@ -7,6 +7,7 @@ require_once '../config/config.php';
 require_once '../config/database.php';
 require_once '../includes/session_check.php';
 require_once '../includes/functions.php';
+require_once '../includes/email_functions.php';
 
 header('Content-Type: application/json');
 
@@ -33,9 +34,11 @@ try {
     $result = rejectUser($userId);
     
     if ($result) {
+        $emailSent = sendRejectionEmail($userId);
         echo json_encode([
             'success' => true,
-            'message' => 'User account rejected successfully'
+            'message' => 'User account rejected successfully',
+            'email_sent' => $emailSent
         ]);
     } else {
         echo json_encode([

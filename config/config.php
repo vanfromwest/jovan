@@ -6,7 +6,7 @@
 
 // Website settings
 define('SITE_NAME', 'CCSICT Faculty Monitoring System');
-define('SITE_URL', 'http://localhost/ccsict_faculty_monitoring');
+define('SITE_URL', 'http://localhost/jovan');
 define('SITE_THEME_COLOR', '#2d5016'); // Dark Green
 define('SITE_ACCENT_COLOR', '#ffd700'); // Yellow
 
