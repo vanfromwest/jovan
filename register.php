@@ -236,11 +236,9 @@ $departments = getAllDepartments();
                         <label for="department_id" class="form-label">Department *</label>
                         <select class="form-select" id="department_id" name="department_id" required>
                             <option value="">-- Select Department --</option>
-                            <?php foreach ($departments as $dept): ?>
-                                <option value="<?php echo $dept['id']; ?>">
-                                    <?php echo htmlspecialchars($dept['name']); ?>
-                                </option>
-                            <?php endforeach; ?>
+                            <option value="1">BS In Information Technology</option>
+                            <option value="2">BS In Computer Science</option>
+                            <option value="3">BS In Entertainment and Multimedia Computing</option>
                         </select>
                     </div>
                 </div>
