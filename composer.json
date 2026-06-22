@@ -1,0 +1,20 @@
+{
+    "name": "ccsict/faculty-monitoring",
+    "description": "CCSICT Faculty Monitoring System",
+    "type": "project",
+    "require": {
+        "php": ">=7.4",
+        "phpmailer/phpmailer": "^6.9"
+    },
+    "require-dev": {},
+    "autoload": {
+        "psr-4": {
+            "CCSICT\\": "src/"
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "composer/installers": true
+        }
+    }
+}

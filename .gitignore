@@ -1,0 +1,52 @@
+# XAMPP & System Files
+htdocs/
+*/config/local.php
+*.log
+php_error.log
+error_log
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Uploads & Generated Files
+uploads/profiles/*
+qrcodes/*
+!uploads/.gitkeep
+!qrcodes/.gitkeep
+
+# PHP Session Files
+/tmp/*
+/var/*
+
+# Database Backups
+database/backups/*
+*.sql.bak
+
+# Environment Files
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+*.ini
+
+# Temporary Files
+*.tmp
+*.temp
+*~
+
+# Node (if using npm in future)
+node_modules/
+package-lock.json
+
+# Composer (if using in future)
+vendor/
+composer.lock
