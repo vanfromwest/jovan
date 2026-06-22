@@ -209,6 +209,12 @@ body > footer {
     border: 2px solid #dc3545;
 }
 
+.status-badge.travel {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 2px solid #ffc107;
+}
+
 .status-badge-pulse {
     display: inline-block;
     width: 12px;
@@ -225,6 +231,11 @@ body > footer {
 .status-badge.out .status-badge-pulse {
     background-color: #dc3545;
     box-shadow: 0 0 10px rgba(220, 53, 69, 0.5);
+}
+
+.status-badge.travel .status-badge-pulse {
+    background-color: #ffc107;
+    box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
 }
 
 @keyframes pulse {

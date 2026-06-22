@@ -39,13 +39,19 @@ $recentAttendance = getFacultyAttendance($facultyId, null, null);
                             <div class="card-body text-center">
                                 <h2 class="mb-3">
                                     <?php 
-                                    $statusClass = $status['status'] === 'IN' ? 'in' : 'out';
-                                    $statusText = $status['status'] === 'IN' ? 'IN' : 'OUT';
+                                    $statusClass = $status['status'] === 'IN' ? 'in' : ($status['status'] === 'TRAVEL' ? 'travel' : 'out');
+                                    $statusText = $status['status'] === 'IN' ? 'IN - In Office' : ($status['status'] === 'TRAVEL' ? 'ON TRAVEL' : 'OUT - Away');
                                     ?>
                                     <span class="status-badge <?php echo $statusClass; ?>">
                                         <span class="status-badge-pulse"></span> <?php echo $statusText; ?>
                                     </span>
                                 </h2>
+                                
+                                <?php if ($status['status'] === 'TRAVEL'): ?>
+                                    <p class="text-muted"><strong><i class="bi bi-airplane"></i> Travel Dates:</strong>
+                                        <?php echo htmlspecialchars($status['travel_from']); ?> to <?php echo htmlspecialchars($status['travel_to']); ?>
+                                        (<?php echo intval($status['travel_days']); ?> day(s))</p>
+                                <?php endif; ?>
                                 
                                 <?php if ($status['activity']): ?>
                                     <p class="text-muted">Activity: <strong><?php echo htmlspecialchars($status['activity']); ?></strong></p>

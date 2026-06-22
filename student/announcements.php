@@ -42,10 +42,18 @@ $announcements = getAnnouncements(20);
                                                 <?php if ($ann['is_pinned']): ?>
                                                     <span class="pinned-badge"><i class="bi bi-pin-fill"></i> Pinned</span>
                                                 <?php endif; ?>
+                                                <?php if (!empty($ann['priority']) && $ann['priority'] !== 'MEDIUM'): ?>
+                                                    <span class="badge bg-<?php echo $ann['priority'] === 'HIGH' ? 'danger' : ($ann['priority'] === 'LOW' ? 'secondary' : 'warning'); ?> ms-2">
+                                                        <?php echo htmlspecialchars($ann['priority']); ?>
+                                                    </span>
+                                                <?php endif; ?>
                                             </h5>
                                             <small class="text-muted">
                                                 <i class="bi bi-person"></i> <?php echo htmlspecialchars($ann['fullname']); ?> |
                                                 <i class="bi bi-clock"></i> <?php echo formatDateTime($ann['created_at']); ?>
+                                                <?php if (!empty($ann['expiration_date'])): ?>
+                                                    | <i class="bi bi-calendar-x"></i> Expires: <?php echo formatDateTime($ann['expiration_date']); ?>
+                                                <?php endif; ?>
                                             </small>
                                         </div>
                                     </div>

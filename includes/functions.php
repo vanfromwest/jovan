@@ -156,7 +156,7 @@ function getFacultyStatus($facultyId) {
     return $stmt->get_result()->fetch_assoc();
 }
 
-function updateFacultyStatus($facultyId, $status, $activity = null, $location = null) {
+function updateFacultyStatus($facultyId, $status, $activity = null, $location = null, $travelFrom = null, $travelTo = null, $travelDays = null) {
     global $conn;
     
     // Check if status record exists
@@ -169,17 +169,17 @@ function updateFacultyStatus($facultyId, $status, $activity = null, $location = 
         // Update existing status
         $stmt = $conn->prepare("
             UPDATE faculty_status 
-            SET status = ?, activity = ?, location = ?, updated_at = NOW()
+            SET status = ?, activity = ?, location = ?, travel_from = ?, travel_to = ?, travel_days = ?, updated_at = NOW()
             WHERE faculty_id = ?
         ");
-        $stmt->bind_param("sssi", $status, $activity, $location, $facultyId);
+        $stmt->bind_param("sssssii", $status, $activity, $location, $travelFrom, $travelTo, $travelDays, $facultyId);
     } else {
         // Insert new status
         $stmt = $conn->prepare("
-            INSERT INTO faculty_status (faculty_id, status, activity, location)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO faculty_status (faculty_id, status, activity, location, travel_from, travel_to, travel_days)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         ");
-        $stmt->bind_param("isss", $facultyId, $status, $activity, $location);
+        $stmt->bind_param("isssssi", $facultyId, $status, $activity, $location, $travelFrom, $travelTo, $travelDays);
     }
     
     return $stmt->execute();
@@ -230,6 +230,9 @@ function searchFaculty($query, $type = null, $departmentId = null) {
             fs.status,
             fs.activity,
             fs.location,
+            fs.travel_from,
+            fs.travel_to,
+            fs.travel_days,
             fs.updated_at
         FROM users u
         JOIN faculty f ON u.id = f.user_id
@@ -655,11 +658,14 @@ function getUsersByRole($role) {
 function getAnnouncements($limit = 10, $todayOnly = false) {
     global $conn;
     
+    autoExpireAnnouncements();
+    
     $sql = "
         SELECT a.*, u.fullname, u.profile_image
         FROM announcements a
         JOIN users u ON a.created_by = u.id
         WHERE a.is_active = 1
+        AND (a.expiration_date IS NULL OR a.expiration_date >= NOW())
     ";
     if ($todayOnly) {
         $sql .= " AND DATE(a.created_at) = CURDATE()";
@@ -676,11 +682,14 @@ function getAnnouncements($limit = 10, $todayOnly = false) {
 function getPinnedAnnouncements($limit = 5, $todayOnly = false) {
     global $conn;
     
+    autoExpireAnnouncements();
+    
     $sql = "
         SELECT a.*, u.fullname, u.profile_image
         FROM announcements a
         JOIN users u ON a.created_by = u.id
         WHERE a.is_active = 1 AND a.is_pinned = 1
+        AND (a.expiration_date IS NULL OR a.expiration_date >= NOW())
     ";
     if ($todayOnly) {
         $sql .= " AND DATE(a.created_at) = CURDATE()";
@@ -694,33 +703,56 @@ function getPinnedAnnouncements($limit = 5, $todayOnly = false) {
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 
-function createAnnouncement($title, $content, $userId) {
+function createAnnouncement($title, $content, $userId, $isPinned = 0, $priority = 'MEDIUM', $expirationDate = null) {
     global $conn;
     
     $userStmt = $conn->prepare("SELECT role FROM users WHERE id = ?");
     $userStmt->bind_param("i", $userId);
     $userStmt->execute();
     $user = $userStmt->get_result()->fetch_assoc();
-    $isPinned = ($user && $user['role'] === 'Admin') ? 1 : 0;
+    $isPinned = ($user && $user['role'] === 'Admin') ? 1 : $isPinned;
     
     $stmt = $conn->prepare("
-        INSERT INTO announcements (title, content, created_by, is_pinned)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO announcements (title, content, created_by, is_pinned, priority, expiration_date)
+        VALUES (?, ?, ?, ?, ?, ?)
     ");
-    $stmt->bind_param("ssii", $title, $content, $userId, $isPinned);
+    $stmt->bind_param("ssiiss", $title, $content, $userId, $isPinned, $priority, $expirationDate);
     
     return $stmt->execute();
 }
 
-function updateAnnouncement($id, $title, $content) {
+function updateAnnouncement($id, $title, $content, $isPinned = null, $priority = null, $expirationDate = null) {
     global $conn;
+    
+    $updates = ["title = ?", "content = ?", "updated_at = NOW()"];
+    $params = [$title, $content];
+    $types = "ss";
+    
+    if ($isPinned !== null) {
+        $updates[] = "is_pinned = ?";
+        $params[] = $isPinned;
+        $types .= "i";
+    }
+    if ($priority !== null) {
+        $updates[] = "priority = ?";
+        $params[] = $priority;
+        $types .= "s";
+    }
+    if ($expirationDate !== null) {
+        $updates[] = "expiration_date = ?";
+        $params[] = $expirationDate;
+        $types .= "s";
+    }
+    
+    $params[] = $id;
+    $types .= "i";
     
     $stmt = $conn->prepare("
         UPDATE announcements 
-        SET title = ?, content = ?, updated_at = NOW()
+        SET " . implode(", ", $updates) . "
         WHERE id = ?
     ");
-    $stmt->bind_param("ssi", $title, $content, $id);
+    $stmt->bind_param($types, ...$params);
     
     return $stmt->execute();
 }
@@ -730,6 +762,20 @@ function deleteAnnouncement($id) {
     
     $stmt = $conn->prepare("UPDATE announcements SET is_active = 0 WHERE id = ?");
     $stmt->bind_param("i", $id);
+    
+    return $stmt->execute();
+}
+
+function autoExpireAnnouncements() {
+    global $conn;
+    
+    $stmt = $conn->prepare("
+        UPDATE announcements 
+        SET is_active = 0 
+        WHERE is_active = 1 
+        AND expiration_date IS NOT NULL 
+        AND expiration_date < NOW()
+    ");
     
     return $stmt->execute();
 }

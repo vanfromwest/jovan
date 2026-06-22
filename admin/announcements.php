@@ -20,9 +20,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['title'])) {
     $title = sanitizeInput($_POST['title']);
     $content = sanitizeInput($_POST['content']);
+    $priority = sanitizeInput($_POST['priority'] ?? 'MEDIUM');
+    $expirationDate = !empty($_POST['expiration_date']) ? sanitizeInput($_POST['expiration_date']) : null;
+    $isPinned = isset($_POST['is_pinned']) ? 1 : 0;
     
     if (!empty($title) && !empty($content)) {
-        createAnnouncement($title, $content, getCurrentUserId());
+        createAnnouncement($title, $content, getCurrentUserId(), $isPinned, $priority, $expirationDate);
         header('Location: announcements.php?created=1');
         exit();
     }
@@ -60,6 +63,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['title'])) {
                                 <label for="content" class="form-label">Content</label>
                                 <textarea class="form-control" id="content" name="content" rows="4" required></textarea>
                             </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="priority" class="form-label">Priority</label>
+                                    <select class="form-select" id="priority" name="priority">
+                                        <option value="LOW">Low</option>
+                                        <option value="MEDIUM" selected>Medium</option>
+                                        <option value="HIGH">High</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="expiration_date" class="form-label">Expiration Date</label>
+                                    <input type="date" class="form-control" id="expiration_date" name="expiration_date">
+                                </div>
+                            </div>
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="is_pinned" name="is_pinned">
+                                <label class="form-check-label" for="is_pinned">Pin this announcement (Admin only)</label>
+                            </div>
                             <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-send"></i> Post Announcement
                             </button>
@@ -82,8 +103,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['title'])) {
                                         <?php if ($ann['is_pinned']): ?>
                                             <span class="pinned-badge"><i class="bi bi-pin-fill"></i> Pinned</span>
                                         <?php endif; ?>
+                                        <?php if (!empty($ann['priority']) && $ann['priority'] !== 'MEDIUM'): ?>
+                                            <span class="badge bg-<?php echo $ann['priority'] === 'HIGH' ? 'danger' : ($ann['priority'] === 'LOW' ? 'secondary' : 'warning'); ?> ms-2">
+                                                <?php echo htmlspecialchars($ann['priority']); ?>
+                                            </span>
+                                        <?php endif; ?>
                                     </h5>
-                                    <p class="text-muted">By: <?php echo htmlspecialchars($ann['fullname']); ?> | <?php echo formatDateTime($ann['created_at']); ?></p>
+                                    <p class="text-muted">
+                                        By: <?php echo htmlspecialchars($ann['fullname']); ?> | 
+                                        <?php echo formatDateTime($ann['created_at']); ?>
+                                        <?php if (!empty($ann['expiration_date'])): ?>
+                                            | Expires: <?php echo formatDateTime($ann['expiration_date']); ?>
+                                        <?php endif; ?>
+                                    </p>
                                     <p><?php echo htmlspecialchars(substr($ann['content'], 0, 200)); ?>...</p>
                                     <form method="POST" style="display: inline;">
                                         <input type="hidden" name="delete_id" value="<?php echo $ann['id']; ?>">

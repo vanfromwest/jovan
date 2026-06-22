@@ -15,11 +15,13 @@ $postError = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'create') {
     $title = sanitizeInput($_POST['title'] ?? '');
     $content = sanitizeInput($_POST['content'] ?? '');
+    $priority = sanitizeInput($_POST['priority'] ?? 'MEDIUM');
+    $expirationDate = !empty($_POST['expiration_date']) ? sanitizeInput($_POST['expiration_date']) : null;
     
     if (empty($title) || empty($content)) {
         $postError = 'Title and content are required.';
     } else {
-        if (createAnnouncement($title, $content, $userId)) {
+        if (createAnnouncement($title, $content, $userId, 0, $priority, $expirationDate)) {
             $postMessage = 'Announcement posted successfully!';
             logActivity('ANNOUNCEMENT_CREATE', 'Faculty posted announcement: ' . $title);
         } else {
@@ -96,6 +98,20 @@ $announcements = getAnnouncements(20);
                                 <label for="content" class="form-label">Message</label>
                                 <textarea class="form-control" id="content" name="content" rows="4" placeholder="Enter your announcement message" required></textarea>
                             </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="priority" class="form-label">Priority</label>
+                                    <select class="form-select" id="priority" name="priority">
+                                        <option value="LOW">Low</option>
+                                        <option value="MEDIUM" selected>Medium</option>
+                                        <option value="HIGH">High</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="expiration_date" class="form-label">Expiration Date</label>
+                                    <input type="date" class="form-control" id="expiration_date" name="expiration_date">
+                                </div>
+                            </div>
                             <button type="submit" class="btn btn-success">
                                 <i class="bi bi-send"></i> Post Announcement
                             </button>
@@ -111,17 +127,25 @@ $announcements = getAnnouncements(20);
                             <div class="alert alert-info">No announcements at this time</div>
                         <?php else: ?>
                             <?php foreach ($announcements as $ann): ?>
-                                <div class="mb-4 pb-4 border-bottom <?php echo $ann['is_pinned'] ? 'announcement-pinned' : ''; ?>">
+                                <div class="mb-4 pb-4 pb-4 border-bottom <?php echo $ann['is_pinned'] ? 'announcement-pinned' : ''; ?>">
                                     <div class="d-flex justify-content-between align-items-start">
                                         <div>
                                             <h5><?php echo htmlspecialchars($ann['title']); ?>
                                                 <?php if ($ann['is_pinned']): ?>
                                                     <span class="pinned-badge"><i class="bi bi-pin-fill"></i> Pinned</span>
                                                 <?php endif; ?>
+                                                <?php if (!empty($ann['priority']) && $ann['priority'] !== 'MEDIUM'): ?>
+                                                    <span class="badge bg-<?php echo $ann['priority'] === 'HIGH' ? 'danger' : ($ann['priority'] === 'LOW' ? 'secondary' : 'warning'); ?> ms-2">
+                                                        <?php echo htmlspecialchars($ann['priority']); ?>
+                                                    </span>
+                                                <?php endif; ?>
                                             </h5>
                                             <small class="text-muted">
                                                 By: <?php echo htmlspecialchars($ann['fullname']); ?> | 
                                                 <?php echo formatDateTime($ann['created_at']); ?>
+                                                <?php if (!empty($ann['expiration_date'])): ?>
+                                                    | Expires: <?php echo formatDateTime($ann['expiration_date']); ?>
+                                                <?php endif; ?>
                                             </small>
                                         </div>
                                         <?php if ($ann['created_by'] == $userId): ?>

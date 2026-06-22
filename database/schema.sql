@@ -76,9 +76,12 @@ CREATE TABLE IF NOT EXISTS `qr_codes` (
 CREATE TABLE IF NOT EXISTS `faculty_status` (
   `id` INT PRIMARY KEY AUTO_INCREMENT,
   `faculty_id` INT NOT NULL UNIQUE,
-  `status` ENUM('IN', 'OUT') NOT NULL DEFAULT 'OUT',
+  `status` ENUM('IN', 'OUT', 'TRAVEL') NOT NULL DEFAULT 'OUT',
   `activity` VARCHAR(255),
   `location` VARCHAR(255),
+  `travel_from` DATE NULL,
+  `travel_to` DATE NULL,
+  `travel_days` INT NULL,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (`faculty_id`) REFERENCES `faculty`(`id`) ON DELETE CASCADE,
   INDEX `idx_status` (`status`)
@@ -116,8 +119,11 @@ CREATE TABLE IF NOT EXISTS `announcements` (
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `is_active` BOOLEAN DEFAULT 1,
   `is_pinned` BOOLEAN DEFAULT 0,
+  `priority` ENUM('LOW', 'MEDIUM', 'HIGH') DEFAULT 'MEDIUM',
+  `expiration_date` DATETIME NULL,
   FOREIGN KEY (`created_by`) REFERENCES `users`(`id`) ON DELETE CASCADE,
-  INDEX `idx_created_at` (`created_at`)
+  INDEX `idx_created_at` (`created_at`),
+  INDEX `idx_expiration_date` (`expiration_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================

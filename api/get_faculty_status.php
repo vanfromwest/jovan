@@ -21,6 +21,9 @@ try {
             fs.status,
             fs.activity,
             fs.location,
+            fs.travel_from,
+            fs.travel_to,
+            fs.travel_days,
             fs.updated_at
         FROM faculty f
         JOIN users u ON f.user_id = u.id

@@ -13,6 +13,8 @@ if (!isLoggedIn()) {
 }
 
 try {
+    autoExpireAnnouncements();
+    
     $type = $_GET['type'] ?? 'all';
 
     if ($type === 'pinned') {

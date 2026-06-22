@@ -24,6 +24,9 @@ try {
     $status = sanitizeInput($_POST['status'] ?? '');
     $activity = sanitizeInput($_POST['activity'] ?? null);
     $location = sanitizeInput($_POST['location'] ?? null);
+    $travelFrom = !empty($_POST['travel_from']) ? sanitizeInput($_POST['travel_from']) : null;
+    $travelTo = !empty($_POST['travel_to']) ? sanitizeInput($_POST['travel_to']) : null;
+    $travelDays = !empty($_POST['travel_days']) ? intval($_POST['travel_days']) : null;
     
     // Verify faculty ownership
     $verifyStmt = $conn->prepare("
@@ -43,7 +46,7 @@ try {
     }
     
     // Update status
-    $result = updateFacultyStatus($facultyId, $status, $activity, $location);
+    $result = updateFacultyStatus($facultyId, $status, $activity, $location, $travelFrom, $travelTo, $travelDays);
     
     if ($result) {
         logActivity('STATUS_UPDATE', "Faculty status updated to $status", $userId);

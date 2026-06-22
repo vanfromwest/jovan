@@ -40,6 +40,7 @@ define('STATUS_REJECTED', 'REJECTED');
 // Faculty status
 define('FACULTY_STATUS_IN', 'IN');
 define('FACULTY_STATUS_OUT', 'OUT');
+define('FACULTY_STATUS_TRAVEL', 'TRAVEL');
 
 // Timezone
 date_default_timezone_set('Asia/Manila');

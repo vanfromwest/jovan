@@ -49,11 +49,12 @@ $departments = getAllDepartments();
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label fw-semibold"><i class="bi bi-funnel"></i> Status</label>
-                                <select class="form-select" id="status-filter">
-                                    <option value="">All Status</option>
-                                    <option value="IN">IN</option>
-                                    <option value="OUT">OUT</option>
-                                </select>
+                                    <select class="form-select" id="status-filter">
+                                        <option value="">All Status</option>
+                                        <option value="IN">IN</option>
+                                        <option value="OUT">OUT</option>
+                                        <option value="TRAVEL">ON TRAVEL</option>
+                                    </select>
                             </div>
                         </div>
                         <div class="search-stats" id="search-stats"></div>
@@ -63,7 +64,7 @@ $departments = getAllDepartments();
                 <div class="row" id="faculty-grid">
                     <?php foreach ($facultyList as $faculty):
                         $status = getFacultyStatus($faculty['faculty_id']);
-                        $statusClass = $status['status'] === 'IN' ? 'in' : 'out';
+                        $statusClass = $status['status'] === 'IN' ? 'in' : ($status['status'] === 'TRAVEL' ? 'travel' : 'out');
                     ?>
                         <div class="col-md-6 col-lg-4 mb-4 faculty-card"
                              data-faculty-id="<?php echo $faculty['faculty_id']; ?>"
@@ -76,8 +77,15 @@ $departments = getAllDepartments();
                                     <p class="text-muted"><?php echo htmlspecialchars($faculty['position'] ?? 'Faculty'); ?></p>
                                     <span class="status-badge <?php echo $statusClass; ?> mb-3">
                                         <span class="status-badge-pulse"></span>
-                                        <?php echo $status['status'] === 'IN' ? 'IN' : 'OUT'; ?>
+                                        <?php echo $status['status'] === 'IN' ? 'IN - In Office' : ($status['status'] === 'TRAVEL' ? 'ON TRAVEL' : 'OUT - Away'); ?>
                                     </span>
+                                    <?php if ($status['status'] === 'TRAVEL' && $status['travel_from']): ?>
+                                        <p class="small mt-2">
+                                            <i class="bi bi-calendar-range"></i>
+                                            <?php echo htmlspecialchars($status['travel_from']); ?> to <?php echo htmlspecialchars($status['travel_to']); ?>
+                                            (<?php echo intval($status['travel_days']); ?> day(s))
+                                        </p>
+                                    <?php endif; ?>
                                     <?php if ($status['activity']): ?>
                                         <p class="small mt-2">
                                             <i class="bi bi-info-circle"></i>
@@ -186,11 +194,14 @@ $departments = getAllDepartments();
             $('#search-stats').text(filtered.length + ' result(s) found for "' + query + '"');
 
             $.each(filtered, function(_, f) {
-                const statusClass = f.status === 'IN' ? 'in' : 'out';
-                const statusText = f.status === 'IN' ? 'IN' : 'OUT';
-                const activityHtml = f.activity
-                    ? '<p class="small mt-2"><i class="bi bi-info-circle"></i> ' + escapeHtml(f.activity) + '</p>'
-                    : '';
+                const statusClass = f.status === 'IN' ? 'in' : (f.status === 'TRAVEL' ? 'travel' : 'out');
+                const statusText = f.status === 'IN' ? 'IN - In Office' : (f.status === 'TRAVEL' ? 'ON TRAVEL' : 'OUT - Away');
+                let activityHtml = '';
+                if (f.status === 'TRAVEL' && f.travel_from) {
+                    activityHtml = '<p class="small mt-2"><i class="bi bi-calendar-range"></i> ' + escapeHtml(f.travel_from) + ' to ' + escapeHtml(f.travel_to) + ' (' + f.travel_days + ' day(s))</p>';
+                } else if (f.activity) {
+                    activityHtml = '<p class="small mt-2"><i class="bi bi-info-circle"></i> ' + escapeHtml(f.activity) + '</p>';
+                }
 
                 $grid.append(`
                     <div class="col-md-6 col-lg-4 mb-4">

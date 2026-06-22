@@ -16,8 +16,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $status = sanitizeInput($_POST['status'] ?? 'OUT');
     $activity = sanitizeInput($_POST['activity'] ?? '');
     $location = sanitizeInput($_POST['location'] ?? '');
+    $travelFrom = !empty($_POST['travel_from']) ? sanitizeInput($_POST['travel_from']) : null;
+    $travelTo = !empty($_POST['travel_to']) ? sanitizeInput($_POST['travel_to']) : null;
+    $travelDays = !empty($_POST['travel_days']) ? intval($_POST['travel_days']) : null;
     
-    updateFacultyStatus($facultyId, $status, $activity, $location);
+    updateFacultyStatus($facultyId, $status, $activity, $location, $travelFrom, $travelTo, $travelDays);
     logActivity('STATUS_UPDATE', "Faculty status updated to $status - $activity");
     
     $_SESSION['success_message'] = 'Status updated successfully!';
@@ -55,13 +58,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="card-body">
                                 <h4 class="mb-3">
                                     <?php 
-                                    $statusClass = $currentStatus['status'] === 'IN' ? 'in' : 'out';
-                                    $statusText = $currentStatus['status'] === 'IN' ? 'IN' : 'OUT';
+                                    $statusClass = $currentStatus['status'] === 'IN' ? 'in' : ($currentStatus['status'] === 'TRAVEL' ? 'travel' : 'out');
+                                    $statusText = $currentStatus['status'] === 'IN' ? 'IN - In Office' : ($currentStatus['status'] === 'TRAVEL' ? 'ON TRAVEL' : 'OUT - Away');
                                     ?>
                                     <span class="status-badge <?php echo $statusClass; ?>">
                                         <span class="status-badge-pulse"></span> <?php echo $statusText; ?>
                                     </span>
                                 </h4>
+                                <?php if ($currentStatus['status'] === 'TRAVEL'): ?>
+                                    <p><strong><i class="bi bi-airplane"></i> Travel Dates:</strong>
+                                        <?php echo htmlspecialchars($currentStatus['travel_from']); ?> to <?php echo htmlspecialchars($currentStatus['travel_to']); ?>
+                                        (<?php echo intval($currentStatus['travel_days']); ?> day(s))</p>
+                                <?php endif; ?>
                                 <?php if ($currentStatus['activity']): ?>
                                     <p><strong>Activity:</strong> <?php echo htmlspecialchars($currentStatus['activity']); ?></p>
                                 <?php endif; ?>
@@ -80,9 +88,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <form method="POST">
                                     <div class="mb-3">
                                         <label for="status" class="form-label">Status *</label>
-                                        <select class="form-select" id="status" name="status" required onchange="toggleActivityField()">
+                                        <select class="form-select" id="status" name="status" required onchange="toggleFields()">
                                             <option value="IN">IN - In Office</option>
                                             <option value="OUT" selected>OUT - Away</option>
+                                            <option value="TRAVEL">ON TRAVEL</option>
                                         </select>
                                     </div>
 
@@ -104,6 +113,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                placeholder="e.g., Laboratory 2, Meeting Room, etc.">
                                     </div>
 
+                                    <div id="travel-fields" style="display:none;">
+                                        <div class="row">
+                                            <div class="col-md-5 mb-3">
+                                                <label for="travel_from" class="form-label">Travel From</label>
+                                                <input type="date" class="form-control" id="travel_from" name="travel_from">
+                                            </div>
+                                            <div class="col-md-5 mb-3">
+                                                <label for="travel_to" class="form-label">Travel To</label>
+                                                <input type="date" class="form-control" id="travel_to" name="travel_to" onchange="calculateDays()">
+                                            </div>
+                                            <div class="col-md-2 mb-3">
+                                                <label for="travel_days" class="form-label">Days</label>
+                                                <input type="number" class="form-control" id="travel_days" name="travel_days" readonly>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <button type="submit" class="btn btn-primary w-100">
                                         <i class="bi bi-check"></i> Update Status
                                     </button>
@@ -121,18 +147,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         const SITE_URL = '<?php echo SITE_URL; ?>';
         const UPLOAD_DIR = '<?php echo UPLOAD_DIR; ?>';
 
-        function toggleActivityField() {
+        function toggleFields() {
             const status = document.getElementById('status').value;
             const activityField = document.getElementById('activity-field');
+            const travelFields = document.getElementById('travel-fields');
+            const locationField = document.getElementById('location');
+
             if (status === 'IN') {
                 activityField.style.display = 'none';
+                travelFields.style.display = 'none';
+                locationField.closest('.mb-3').style.display = 'block';
+            } else if (status === 'TRAVEL') {
+                activityField.style.display = 'block';
+                travelFields.style.display = 'block';
+                locationField.closest('.mb-3').style.display = 'none';
             } else {
                 activityField.style.display = 'block';
+                travelFields.style.display = 'none';
+                locationField.closest('.mb-3').style.display = 'block';
+            }
+        }
+
+        function calculateDays() {
+            const from = document.getElementById('travel_from').value;
+            const to = document.getElementById('travel_to').value;
+            if (from && to) {
+                const diff = new Date(to) - new Date(from);
+                const days = Math.max(0, Math.round(diff / (1000 * 60 * 60 * 24)) + 1);
+                document.getElementById('travel_days').value = days;
             }
         }
 
         // Initialize on page load
-        toggleActivityField();
+        toggleFields();
     </script>
 </body>
 </html>

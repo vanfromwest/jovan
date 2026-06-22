@@ -56,16 +56,19 @@ function updateStatusDisplay(facultyData) {
         var $card = $('[data-faculty-id="' + faculty.id + '"]');
         
         if ($card.length) {
-            var statusClass = faculty.status === 'IN' ? 'in' : 'out';
-            var statusText = faculty.status === 'IN' ? 'IN' : 'OUT';
+            var statusClass = faculty.status === 'IN' ? 'in' : (faculty.status === 'TRAVEL' ? 'travel' : 'out');
+            var statusText = faculty.status === 'IN' ? 'IN' : (faculty.status === 'TRAVEL' ? 'TRAVEL' : 'OUT');
             var activity = faculty.activity ? faculty.activity : '';
             var location = faculty.location ? faculty.location : '';
             
             $card.find('.faculty-status-badge').html(`
                 <span class="status-badge-pulse"></span> ${statusText}
-            `).removeClass('in out').addClass(statusClass);
+            `).removeClass('in out travel').addClass(statusClass);
             
-            if (activity || location) {
+            if (faculty.status === 'TRAVEL' && faculty.travel_from) {
+                var travelInfo = 'Travel: ' + faculty.travel_from + ' to ' + faculty.travel_to + ' (' + faculty.travel_days + ' day(s))';
+                $card.find('.faculty-activity').text(travelInfo);
+            } else if (activity || location) {
                 var activityText = activity + (location ? ' at ' + location : '');
                 $card.find('.faculty-activity').text(activityText);
             } else {
@@ -208,7 +211,7 @@ function submitActivitySelection(facultyId) {
 /**
  * Update faculty status
  */
-function updateFacultyStatus(facultyId, status, activity, location) {
+function updateFacultyStatus(facultyId, status, activity, location, travelFrom, travelTo, travelDays) {
     $.ajax({
         url: SITE_URL + '/api/update_status.php',
         type: 'POST',
@@ -217,7 +220,10 @@ function updateFacultyStatus(facultyId, status, activity, location) {
             faculty_id: facultyId,
             status: status,
             activity: activity,
-            location: location
+            location: location,
+            travel_from: travelFrom,
+            travel_to: travelTo,
+            travel_days: travelDays
         },
         success: function(response) {
             if (response.success) {
