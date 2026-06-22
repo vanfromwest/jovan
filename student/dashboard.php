@@ -76,6 +76,12 @@ foreach ($facultyList as $f) {
                     <div class="card-header">
                         <i class="bi bi-megaphone"></i> Latest Announcements
                         <small class="ms-auto refresh-indicator" id="announcement-refresh-indicator" title="Auto-refreshes every 30s"></small>
+                        <div class="search-container ms-auto">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                <input type="text" class="form-control" id="announcement-search" placeholder="Search by professor name...">
+                            </div>
+                        </div>
                     </div>
                     <div class="card-body" id="announcements-container">
                         <?php if (empty($announcements)): ?>
@@ -115,7 +121,6 @@ foreach ($facultyList as $f) {
         const container = document.getElementById('announcements-container');
         const indicator = document.getElementById('announcement-refresh-indicator');
         if (!container) return;
-
         function refreshAnnouncements() {
             if (indicator) indicator.innerHTML = '<i class="bi bi-arrow-repeat spin"></i>';
 
@@ -152,6 +157,7 @@ foreach ($facultyList as $f) {
                     }
                     if (indicator) indicator.innerHTML = '<i class="bi bi-check-circle-fill text-success" style="font-size:12px;"></i>';
                 })
+
                 .catch(function() {
                     if (indicator) indicator.innerHTML = '<i class="bi bi-exclamation-circle-fill text-danger" style="font-size:12px;"></i>';
                 });
@@ -176,6 +182,52 @@ foreach ($facultyList as $f) {
             var opts = { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' };
             return d.toLocaleDateString('en-US', opts);
         }
+
+        function searchAnnouncements() {
+            const searchInput = document.getElementById('announcement-search');
+            if (!searchInput) return;
+            
+            const searchTerm = searchInput.value.trim();
+            const url = new URL(window.location.href);
+            if (searchTerm) {
+                url.searchParams.set('search', searchTerm);
+            } else {
+                url.searchParams.delete('search');
+            }
+            
+            fetch(url.toString())
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        const items = container.querySelectorAll('.announcement-item');
+                        const filteredItems = Array.from(items).filter(item => {
+                            const fullname = item.querySelector('small.text-muted i.bi-person') ? 
+                                item.querySelector('small.text-muted').textContent : '';
+                            return fullname.toLowerCase().includes(searchTerm.toLowerCase());
+                        });
+                        
+                        if (filteredItems.length === 0) {
+                            container.innerHTML = '<p class="text-muted" id="no-announcements-msg">No announcements found matching "' + searchTerm + '"</p>';
+                        } else {
+                            let html = '';
+                            filteredItems.forEach(function(item) {
+                                html += item.outerHTML;
+                            });
+                            html += '<a href="announcements.php" class="btn btn-sm btn-primary mt-2"><i class="bi bi-megaphone"></i> View All Announcements</a>';
+                            container.innerHTML = html;
+                        }
+                    }
+                })
+                .catch(function() {
+                    console.error('Search failed');
+                });
+        }
+
+        document.getElementById('announcement-search').addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') {
+                searchAnnouncements();
+            }
+        });
 
         setInterval(refreshAnnouncements, 30000);
     });

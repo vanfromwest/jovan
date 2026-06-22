@@ -655,7 +655,7 @@ function getUsersByRole($role) {
 // Announcement Functions
 // ============================================
 
-function getAnnouncements($limit = 10, $todayOnly = false) {
+function getAnnouncements($limit = 10, $todayOnly = false, $search = null) {
     global $conn;
     
     autoExpireAnnouncements();
@@ -670,10 +670,18 @@ function getAnnouncements($limit = 10, $todayOnly = false) {
     if ($todayOnly) {
         $sql .= " AND DATE(a.created_at) = CURDATE()";
     }
+    if ($search) {
+        $sql .= " AND u.fullname LIKE ?";
+    }
     $sql .= " ORDER BY a.is_pinned DESC, a.created_at DESC LIMIT ?";
     
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $limit);
+    if ($search) {
+        $searchTerm = "%" . $search . "%";
+        $stmt->bind_param("si", $searchTerm, $limit);
+    } else {
+        $stmt->bind_param("i", $limit);
+    }
     $stmt->execute();
     
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -706,11 +714,27 @@ function getPinnedAnnouncements($limit = 5, $todayOnly = false) {
 function createAnnouncement($title, $content, $userId, $isPinned = 0, $priority = 'MEDIUM', $expirationDate = null) {
     global $conn;
     
+    $title = sanitizeInput($title);
+    $content = sanitizeInput($content);
+    
+    if (empty($title) || empty($content)) {
+        return false;
+    }
+    
+    $validPriorities = ['LOW', 'MEDIUM', 'HIGH'];
+    if (!in_array($priority, $validPriorities)) {
+        $priority = 'MEDIUM';
+    }
+    
     $userStmt = $conn->prepare("SELECT role FROM users WHERE id = ?");
     $userStmt->bind_param("i", $userId);
     $userStmt->execute();
     $user = $userStmt->get_result()->fetch_assoc();
     $isPinned = ($user && $user['role'] === 'Admin') ? 1 : $isPinned;
+    
+    if ($expirationDate && !validateDate($expirationDate)) {
+        $expirationDate = null;
+    }
     
     $stmt = $conn->prepare("
         INSERT INTO announcements (title, content, created_by, is_pinned, priority, expiration_date)
@@ -723,6 +747,11 @@ function createAnnouncement($title, $content, $userId, $isPinned = 0, $priority 
 
 function updateAnnouncement($id, $title, $content, $isPinned = null, $priority = null, $expirationDate = null) {
     global $conn;
+    
+    $validPriorities = ['LOW', 'MEDIUM', 'HIGH'];
+    if ($priority !== null && !in_array($priority, $validPriorities)) {
+        $priority = null;
+    }
     
     $updates = ["title = ?", "content = ?", "updated_at = NOW()"];
     $params = [$title, $content];
@@ -739,6 +768,9 @@ function updateAnnouncement($id, $title, $content, $isPinned = null, $priority =
         $types .= "s";
     }
     if ($expirationDate !== null) {
+        if (!validateDate($expirationDate)) {
+            $expirationDate = null;
+        }
         $updates[] = "expiration_date = ?";
         $params[] = $expirationDate;
         $types .= "s";
@@ -786,6 +818,16 @@ function autoExpireAnnouncements() {
 
 function sanitizeInput($data) {
     return htmlspecialchars(strip_tags(trim($data)), ENT_QUOTES, 'UTF-8');
+}
+
+function validatePriority($priority) {
+    $validPriorities = ['LOW', 'MEDIUM', 'HIGH'];
+    return in_array($priority, $validPriorities);
+}
+
+function validateDate($date) {
+    $d = DateTime::createFromFormat('Y-m-d', $date);
+    return $d && $d->format('Y-m-d') === $date;
 }
 
 function validateEmail($email) {

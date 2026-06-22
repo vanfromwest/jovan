@@ -7,7 +7,8 @@ require_once '../includes/functions.php';
 $pageTitle = 'Announcements';
 requireRole(['Student']);
 
-$announcements = getAnnouncements(20);
+$search = $_GET['search'] ?? null;
+$announcements = getAnnouncements(20, false, $search);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -23,12 +24,20 @@ $announcements = getAnnouncements(20);
     <div class="main-content">
         <?php require_once '../includes/sidebar.php'; ?>
         <div class="content-wrapper">
-            <div class="container-fluid">
-                <h1 class="h3 mb-4"><i class="bi bi-megaphone"></i> Announcements</h1>
+    <div class="container-fluid">
+        <h1 class="h3 mb-4"><i class="bi bi-megaphone"></i> Announcements</h1>
 
-                <div class="dashboard-card">
-                    <div class="card-header">Latest Announcements</div>
-                    <div class="card-body">
+        <div class="dashboard-card">
+            <div class="card-header">
+                Latest Announcements
+                <div class="search-container ms-auto">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" id="announcement-search" placeholder="Search by professor name...">
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
                         <?php if (empty($announcements)): ?>
                             <div class="alert alert-info">
                                 <i class="bi bi-info-circle"></i> No announcements available at this time.
@@ -71,6 +80,28 @@ $announcements = getAnnouncements(20);
     <script>
         const SITE_URL = '<?php echo SITE_URL; ?>';
         const UPLOAD_DIR = '<?php echo UPLOAD_DIR; ?>';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('announcement-search');
+            if (!searchInput) return;
+
+            function searchAnnouncements() {
+                const searchTerm = searchInput.value.trim();
+                const url = new URL(window.location.href);
+                if (searchTerm) {
+                    url.searchParams.set('search', searchTerm);
+                } else {
+                    url.searchParams.delete('search');
+                }
+                window.location.href = url.toString();
+            }
+
+            searchInput.addEventListener('keyup', function(e) {
+                if (e.key === 'Enter') {
+                    searchAnnouncements();
+                }
+            });
+        });
     </script>
 </body>
 </html>

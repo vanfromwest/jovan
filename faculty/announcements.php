@@ -49,7 +49,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
-$announcements = getAnnouncements(20);
+$search = $_GET['search'] ?? null;
+$announcements = getAnnouncements(20, false, $search);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -121,7 +122,15 @@ $announcements = getAnnouncements(20);
 
                 <!-- All Announcements -->
                 <div class="dashboard-card">
-                    <div class="card-header">All Announcements</div>
+                    <div class="card-header">
+                        All Announcements
+                        <div class="search-container ms-auto">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                <input type="text" class="form-control" id="announcement-search" placeholder="Search by professor name..." value="<?php echo htmlspecialchars($search ?? ''); ?>">
+                            </div>
+                        </div>
+                    </div>
                     <div class="card-body">
                         <?php if (empty($announcements)): ?>
                             <div class="alert alert-info">No announcements at this time</div>
@@ -172,6 +181,28 @@ $announcements = getAnnouncements(20);
     <script>
         const SITE_URL = '<?php echo SITE_URL; ?>';
         const UPLOAD_DIR = '<?php echo UPLOAD_DIR; ?>';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('announcement-search');
+            if (!searchInput) return;
+
+            function searchAnnouncements() {
+                const searchTerm = searchInput.value.trim();
+                const url = new URL(window.location.href);
+                if (searchTerm) {
+                    url.searchParams.set('search', searchTerm);
+                } else {
+                    url.searchParams.delete('search');
+                }
+                window.location.href = url.toString();
+            }
+
+            searchInput.addEventListener('keyup', function(e) {
+                if (e.key === 'Enter') {
+                    searchAnnouncements();
+                }
+            });
+        });
     </script>
 </body>
 </html>

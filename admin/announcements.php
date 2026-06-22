@@ -7,7 +7,8 @@ require_once '../includes/functions.php';
 $pageTitle = 'Announcements';
 requireRole(['Admin', 'Faculty']);
 
-$announcements = getAnnouncements(20);
+$search = $_GET['search'] ?? null;
+$announcements = getAnnouncements(20, false, $search);
 
 // Handle deletion
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
@@ -25,9 +26,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['title'])) {
     $isPinned = isset($_POST['is_pinned']) ? 1 : 0;
     
     if (!empty($title) && !empty($content)) {
-        createAnnouncement($title, $content, getCurrentUserId(), $isPinned, $priority, $expirationDate);
-        header('Location: announcements.php?created=1');
-        exit();
+        if (createAnnouncement($title, $content, getCurrentUserId(), $isPinned, $priority, $expirationDate)) {
+            header('Location: announcements.php?created=1');
+            exit();
+        } else {
+            header('Location: announcements.php?error=1');
+            exit();
+        }
     }
 }
 ?>
@@ -47,6 +52,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['title'])) {
         <div class="content-wrapper">
             <div class="container-fluid">
                 <h1 class="h3 mb-4"><i class="bi bi-megaphone"></i> Announcements</h1>
+
+                <!-- Search Bar -->
+                <div class="mb-4">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" id="announcement-search" placeholder="Search by professor name..." value="<?php echo htmlspecialchars($search ?? ''); ?>">
+                    </div>
+                </div>
 
                 <!-- Create Announcement Form -->
                 <div class="dashboard-card mb-4">
@@ -92,6 +105,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['title'])) {
                 <div class="dashboard-card">
                     <div class="card-header">
                         <i class="bi bi-list"></i> Recent Announcements
+                        <div class="search-container ms-auto">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                <input type="text" class="form-control" id="announcement-search" placeholder="Search by professor name..." value="<?php echo htmlspecialchars($search ?? ''); ?>">
+                            </div>
+                        </div>
                     </div>
                     <div class="card-body">
                         <?php if (empty($announcements)): ?>
@@ -136,6 +155,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['title'])) {
     <script>
         const SITE_URL = '<?php echo SITE_URL; ?>';
         const UPLOAD_DIR = '<?php echo UPLOAD_DIR; ?>';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('announcement-search');
+            if (!searchInput) return;
+
+            function searchAnnouncements() {
+                const searchTerm = searchInput.value.trim();
+                const url = new URL(window.location.href);
+                if (searchTerm) {
+                    url.searchParams.set('search', searchTerm);
+                } else {
+                    url.searchParams.delete('search');
+                }
+                window.location.href = url.toString();
+            }
+
+            searchInput.addEventListener('keyup', function(e) {
+                if (e.key === 'Enter') {
+                    searchAnnouncements();
+                }
+            });
+        });
     </script>
 </body>
 </html>

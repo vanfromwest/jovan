@@ -16,11 +16,12 @@ try {
     autoExpireAnnouncements();
     
     $type = $_GET['type'] ?? 'all';
+    $search = $_GET['search'] ?? null;
 
     if ($type === 'pinned') {
         $announcements = getPinnedAnnouncements(10, true);
     } else {
-        $announcements = getAnnouncements(10, true);
+        $announcements = getAnnouncements(10, true, $search);
     }
 
     echo json_encode([
