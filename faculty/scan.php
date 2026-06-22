@@ -3,7 +3,7 @@ require_once '../config/config.php';
 require_once '../includes/session_check.php';
 require_once '../includes/functions.php';
 
-requireRole(['Faculty']);
+requireRole(['Admin', 'Faculty']);
 
 $userId = getCurrentUserId();
 $facultyId = getFacultyId($userId);

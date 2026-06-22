@@ -24,6 +24,9 @@ $userRole = $currentUser['role'] ?? null;
             <a href="<?php echo SITE_URL; ?>/admin/dashboard.php" class="sidebar-link">
                 <i class="bi bi-speedometer2"></i> Dashboard
             </a>
+            <a href="<?php echo SITE_URL; ?>/faculty/scan.php" class="sidebar-link">
+                <i class="bi bi-qr-code"></i> Scan QR Code
+            </a>
             <a href="<?php echo SITE_URL; ?>/admin/faculty_management.php" class="sidebar-link">
                 <i class="bi bi-people"></i> Faculty Management
             </a>
@@ -46,9 +49,6 @@ $userRole = $currentUser['role'] ?? null;
         <?php elseif ($userRole === 'Faculty'): ?>
             <a href="<?php echo SITE_URL; ?>/faculty/dashboard.php" class="sidebar-link">
                 <i class="bi bi-speedometer2"></i> Dashboard
-            </a>
-            <a href="<?php echo SITE_URL; ?>/faculty/scan.php" class="sidebar-link">
-                <i class="bi bi-qr-code"></i> Scan QR Code
             </a>
             <a href="<?php echo SITE_URL; ?>/faculty/my_qr.php" class="sidebar-link">
                 <i class="bi bi-card-image"></i> My QR Code

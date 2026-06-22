@@ -118,6 +118,9 @@ $facultyStatus = getAllFaculty();
                                     <a href="announcements.php" class="btn btn-outline-info">
                                         <i class="bi bi-megaphone"></i> Manage Announcements
                                     </a>
+                                    <a href="<?php echo SITE_URL; ?>/faculty/scan.php" class="btn btn-outline-success">
+                                        <i class="bi bi-qr-code"></i> Scan QR Code
+                                    </a>
                                     <a href="user_management.php" class="btn btn-outline-secondary">
                                         <i class="bi bi-gear"></i> User Management
                                     </a>
