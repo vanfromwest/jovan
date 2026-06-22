@@ -156,12 +156,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Define departments
-$departments = [
-    ['id' => 1, 'name' => 'BS In Information Technology'],
-    ['id' => 2, 'name' => 'BS In Computer Science'],
-    ['id' => 3, 'name' => 'BS In Entertainment and Multimedia Computing']
-];
+// Get departments
+$departments = getAllDepartments();
 ?>
 <!DOCTYPE html>
 <html lang="en">
