@@ -72,8 +72,8 @@ $recentAttendance = getFacultyAttendance($facultyId, null, null);
                                 <i class="bi bi-lightning"></i> Quick Actions
                             </div>
                             <div class="card-body">
-                                <a href="scan.php" class="btn btn-primary w-100 mb-2">
-                                    <i class="bi bi-qr-code"></i> Scan QR Code
+                                <a href="my_qr.php" class="btn btn-primary w-100 mb-2">
+                                    <i class="bi bi-qr-code"></i> My QR Code
                                 </a>
                                 <a href="my_status.php" class="btn btn-info w-100 mb-2">
                                     <i class="bi bi-gear"></i> Update My Status

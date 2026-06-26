@@ -25,9 +25,33 @@ if ($qrData && !empty($qrData['qr_path'])) {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="<?php echo SITE_URL; ?>/assets/css/style.css">
     <style>
+        #qr-reader {
+            width: 100%;
+            min-height: 400px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            margin: 20px 0;
+            background: #f8f9fa;
+            overflow: hidden;
+        }
+
+        #qr-reader video {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            margin: 0 auto;
+        }
+
+        #qr-reader img[alt="Faculty QR Code"] {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            margin: 0 auto;
+        }
+
         @media (max-width: 768px) {
             #qr-reader {
-                height: 350px !important;
+                min-height: 350px;
             }
             .content-wrapper {
                 padding: 10px;
@@ -46,7 +70,7 @@ if ($qrData && !empty($qrData['qr_path'])) {
                     <div class="card-header">Scan QR Code for Attendance</div>
                     <div class="card-body">
                         <p class="text-muted">Use your phone or QR scanner to scan a faculty QR code.</p>
-                        <div id="qr-reader" style="width: 100%; height: 400px; border: 2px solid #ddd; border-radius: 10px; margin: 20px 0; display:flex; align-items:center; justify-content:center; background:#f8f9fa;">
+                        <div id="qr-reader">
                             <?php if ($qrExists): ?>
                                 <div class="text-center">
                                     <p class="text-muted mb-3" style="font-size:0.95rem;">Your faculty QR code is shown here. Use it with another device or press Start Camera to scan.</p>
