@@ -82,20 +82,22 @@ function updateStatusDisplay(facultyData) {
 
 /**
  * Scan QR Code
+ * @param {string} qrToken - The QR token to scan
+ * @param {function} [onComplete] - Optional callback(response|null) after AJAX completes
  */
-function scanQRCode(qrToken) {
+function scanQRCode(qrToken, onComplete, skipDefaultUI) {
     $.ajax({
         url: SITE_URL + '/api/scan_qr.php',
         type: 'POST',
         dataType: 'json',
+        timeout: 10000,
         data: {
             qr_token: qrToken
         },
         success: function(response) {
-            if (response.success) {
+            if (response.success && !skipDefaultUI) {
                 showSuccess(response.message);
                 
-                // If it's a time-out scan, show activity selection
                 if (response.scan_type === 'OUT') {
                     showActivitySelection(response.faculty_id);
                 } else {
@@ -103,12 +105,20 @@ function scanQRCode(qrToken) {
                         location.reload();
                     }, 2000);
                 }
-            } else {
+            } else if (!response.success) {
                 showError(response.message);
+            }
+            if (typeof onComplete === 'function') {
+                onComplete(response);
             }
         },
         error: function(xhr, status, error) {
-            showError('Error during QR scan: ' + error);
+            if (!skipDefaultUI) {
+                showError('Error during QR scan: ' + error);
+            }
+            if (typeof onComplete === 'function') {
+                onComplete(null);
+            }
         }
     });
 }

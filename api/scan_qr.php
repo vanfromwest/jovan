@@ -8,6 +8,8 @@ require_once '../config/database.php';
 require_once '../includes/session_check.php';
 require_once '../includes/functions.php';
 
+set_time_limit(15);
+
 header('Content-Type: application/json');
 
 // Check authentication
@@ -32,19 +34,14 @@ try {
 
     // Allow raw token or full URL containing token parameter
     $qrToken = $qrInput;
-    if (strpos($qrInput, 'token=') !== false) {
-        try {
-            $parsedUrl = parse_url($qrInput);
-            if (!empty($parsedUrl['query'])) {
-                parse_str($parsedUrl['query'], $queryParams);
-                if (!empty($queryParams['token'])) {
-                    $qrToken = sanitizeInput($queryParams['token']);
-                }
-            }
-        } catch (Exception $e) {
-            // Fall back to raw input
-            $qrToken = $qrInput;
+    $parsedUrl = parse_url($qrInput);
+    if (!empty($parsedUrl['query'])) {
+        parse_str($parsedUrl['query'], $queryParams);
+        if (!empty($queryParams['token'])) {
+            $qrToken = sanitizeInput($queryParams['token']);
         }
+    } else if (preg_match('/^[a-f0-9]{32,100}$/i', $qrInput)) {
+        $qrToken = $qrInput;
     }
     
     if (empty($qrToken)) {
@@ -74,8 +71,16 @@ try {
     // Get or create attendance
     $attendance = getOrCreateAttendanceRecord($faculty['id'], $today);
     
-    if (empty($attendance['time_in'])) {
-        // Time In
+    if (empty($attendance['time_in']) || !empty($attendance['time_out'])) {
+        // Time In (either no time_in yet, or previous session already timed out)
+        if (!empty($attendance['time_out'])) {
+            $resetStmt = $conn->prepare("
+                UPDATE attendance SET time_out = NULL, activity_out = NULL, location_out = NULL, updated_at = NOW()
+                WHERE id = ?
+            ");
+            $resetStmt->bind_param("i", $attendance['id']);
+            $resetStmt->execute();
+        }
         recordTimeIn($faculty['id'], $today, $currentTime);
         updateFacultyStatus($faculty['id'], FACULTY_STATUS_IN);
         
@@ -97,6 +102,7 @@ try {
             'scan_type' => 'IN',
             'faculty_id' => $faculty['id'],
             'faculty_name' => $faculty['fullname'],
+            'profile_image' => $faculty['profile_image'],
             'time' => formatTime($currentTime)
         ]);
     } else {
@@ -117,6 +123,7 @@ try {
             'scan_type' => 'OUT',
             'faculty_id' => $faculty['id'],
             'faculty_name' => $faculty['fullname'],
+            'profile_image' => $faculty['profile_image'],
             'time' => formatTime($currentTime)
         ]);
     }

@@ -101,7 +101,7 @@ function generateQRCode($data, $size = 200, $filename = null) {
 }
 
 function generateQRToken() {
-    return bin2hex(random_bytes(50));
+    return bin2hex(random_bytes(16));
 }
 
 // ============================================
@@ -414,7 +414,11 @@ function getOrCreateAttendanceRecord($facultyId, $date) {
         $insertStmt->bind_param("is", $facultyId, $date);
         $insertStmt->execute();
         
-        return getOrCreateAttendanceRecord($facultyId, $date);
+        $newId = $conn->insert_id;
+        $stmt = $conn->prepare("SELECT * FROM attendance WHERE id = ?");
+        $stmt->bind_param("i", $newId);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_assoc();
     }
     
     return $result;

@@ -45,6 +45,14 @@ if ($qrData && !empty($qrData['qr_path'])) {
                             <a href="<?php echo htmlspecialchars($qrUrl); ?>" download="my_qr_code.png" class="btn btn-primary mt-2">
                                 <i class="bi bi-download"></i> Download QR Code
                             </a>
+                            <hr>
+                            <div class="text-start">
+                                <label class="form-label fw-bold">QR Token (for manual entry):</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="text" class="form-control" id="qrTokenInput" value="<?php echo htmlspecialchars($qrData['qr_token']); ?>" readonly>
+                                    <button class="btn btn-outline-secondary" type="button" onclick="copyToken()">Copy</button>
+                                </div>
+                            </div>
                         <?php elseif ($qrData && !$qrExists): ?>
                             <div class="alert alert-warning">QR code file is not found on the server. Please contact the administrator.</div>
                         <?php else: ?>
@@ -57,5 +65,12 @@ if ($qrData && !empty($qrData['qr_path'])) {
     </div>
 
     <?php require_once '../includes/footer.php'; ?>
+    <script>
+    function copyToken() {
+        const inp = document.getElementById('qrTokenInput');
+        inp.select();
+        navigator.clipboard.writeText(inp.value).catch(function() {});
+    }
+    </script>
 </body>
 </html>

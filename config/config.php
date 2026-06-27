@@ -17,8 +17,8 @@ define('MAX_FILE_SIZE', 5 * 1024 * 1024); // 5MB
 define('ALLOWED_EXTENSIONS', ['jpg', 'jpeg', 'png', 'gif']);
 
 // QR Code settings
-define('QR_CODE_SIZE', 200);
-define('QR_CODE_LEVEL', 'H');
+define('QR_CODE_SIZE', 300);
+define('QR_CODE_LEVEL', 'M');
 
 // Session settings
 define('SESSION_LIFETIME', 3600); // 1 hour

@@ -90,8 +90,16 @@ $currentTime = date('H:i:s');
 $attendance = getOrCreateAttendanceRecord($faculty['id'], $today);
 
 // Determine scan type
-if (empty($attendance['time_in'])) {
-    // This is a time-in scan
+if (empty($attendance['time_in']) || !empty($attendance['time_out'])) {
+    // Time-in (either no time_in yet, or previous session already timed out)
+    if (!empty($attendance['time_out'])) {
+        $resetStmt = $conn->prepare("
+            UPDATE attendance SET time_out = NULL, activity_out = NULL, location_out = NULL, updated_at = NOW()
+            WHERE id = ?
+        ");
+        $resetStmt->bind_param("i", $attendance['id']);
+        $resetStmt->execute();
+    }
     recordTimeIn($faculty['id'], $today, $currentTime);
     updateFacultyStatus($faculty['id'], FACULTY_STATUS_IN);
 

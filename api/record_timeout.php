@@ -8,6 +8,8 @@ require_once '../config/database.php';
 require_once '../includes/session_check.php';
 require_once '../includes/functions.php';
 
+set_time_limit(15);
+
 header('Content-Type: application/json');
 
 if (!isLoggedIn()) {

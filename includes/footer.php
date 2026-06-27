@@ -11,7 +11,7 @@
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Custom JS -->
-    <script src="<?php echo SITE_URL; ?>/assets/js/main.js"></script>
-    <script src="<?php echo SITE_URL; ?>/assets/js/ajax.js"></script>
+    <script src="<?php echo SITE_URL; ?>/assets/js/main.js?v=<?php echo filemtime(__DIR__ . '/../assets/js/main.js'); ?>"></script>
+    <script src="<?php echo SITE_URL; ?>/assets/js/ajax.js?v=<?php echo filemtime(__DIR__ . '/../assets/js/ajax.js'); ?>"></script>
 </body>
 </html>

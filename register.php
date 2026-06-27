@@ -131,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 INSERT INTO qr_codes (faculty_id, qr_token, qr_path)
                                 VALUES (?, ?, ?)
                             ");
-                            $facultyId = $conn->insert_id;
+                            $facultyId = $facultyStmt->insert_id;
                             $qrStmt->bind_param("iss", $facultyId, $qrToken, $qrPath);
                             $qrStmt->execute();
 
